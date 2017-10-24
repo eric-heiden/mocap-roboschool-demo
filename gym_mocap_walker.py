@@ -13,7 +13,8 @@ class RoboschoolMocapHumanoid(RoboschoolForwardWalkerMujocoXML):
 
     def __init__(self, model_xml=os.path.join(os.path.dirname(__file__), 'humanoid_mocap.xml')):
         RoboschoolForwardWalkerMujocoXML.__init__(self, model_xml, 'torso', action_dim=56, obs_dim=44, power=0.41)
-        # 17 joints, 4 of them important for walking (hip, knee), others may as well be turned off, 17/4 = 4.25
+        # 56 joints, ? of them important for walking (hip, knee), others may as well be turned off, 17/4 = 4.25
+        # TODO fix these cost parameters
         self.electricity_cost = 4.25 * RoboschoolForwardWalkerMujocoXML.electricity_cost
         self.stall_torque_cost = 4.25 * RoboschoolForwardWalkerMujocoXML.stall_torque_cost
         self.initial_z = 0.8
@@ -29,16 +30,6 @@ class RoboschoolMocapHumanoid(RoboschoolForwardWalkerMujocoXML):
             'rtibia_x', 'rradius_x', 'rfoot_x', 'rfoot_z', 'rhumerus_x', 'rhumerus_y', 'rhumerus_z', 'lfoot_x',
             'lfoot_z', 'lwrist_y', 'rhand_x', 'rhand_z', 'lclavicle_y', 'lclavicle_z', 'rclavicle_y', 'rclavicle_z']
         self.motor_power = [100] * len(self.motor_names)
-        # self.motor_names  = ["abdomen_z", "abdomen_y", "abdomen_x"]
-        # self.motor_power  = [100, 100, 100]
-        # self.motor_names += ["right_hip_x", "right_hip_z", "right_hip_y", "right_knee"]
-        # self.motor_power += [100, 100, 300, 200]
-        # self.motor_names += ["left_hip_x", "left_hip_z", "left_hip_y", "left_knee"]
-        # self.motor_power += [100, 100, 300, 200]
-        # self.motor_names += ["right_shoulder1", "right_shoulder2", "right_elbow"]
-        # self.motor_power += [75, 75, 75]
-        # self.motor_names += ["left_shoulder1", "left_shoulder2", "left_elbow"]
-        # self.motor_power += [75, 75, 75]
         self.motors = [self.jdict[n] for n in self.motor_names]
         self.humanoid_task()
 
@@ -49,6 +40,7 @@ class RoboschoolMocapHumanoid(RoboschoolForwardWalkerMujocoXML):
         self.task = task
         cpose = cpp_household.Pose()
         yaw = yaw_center # + self.np_random.uniform(low=-yaw_random_spread, high=yaw_random_spread)
+        #XXX currently, only walking is supported
         if task == self.TASK_WALK:
             pitch = 0
             roll = 0
@@ -69,8 +61,9 @@ class RoboschoolMocapHumanoid(RoboschoolForwardWalkerMujocoXML):
 
     def apply_action(self, a):
         assert (np.isfinite(a).all())
-        # for i, m, power in zip(range(len(self.motors)), self.motors, self.motor_power):
-        #     m.set_motor_torque(float(power * self.power * np.clip(a[i], -1, +1)))
+        for i, m, power in zip(range(len(self.motors)), self.motors, self.motor_power):
+            m.set_motor_torque(float(power * self.power * np.clip(a[i], -1, +1)))
 
     def alive_bonus(self, z, pitch):
-        return +2 if z > 0.78 else -1  # 2 here because 17 joints produce a lot of electricity cost just from policy noise, living must be better than dying
+        # TODO make sure this is correct
+        return +2 if z > 0.78 else -1  # 2 here because 56 joints produce a lot of electricity cost just from policy noise, living must be better than dying
