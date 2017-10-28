@@ -2,7 +2,9 @@ from roboschool import cpp_household, scene_abstract
 
 import gym, os
 import numpy as np
-from resl_test.gym_mocap_walker import RoboschoolMocapHumanoid
+
+import mocap_env
+from mocap_env.gym_mocap_walker import RoboschoolMocapHumanoid
 from asf_parser import AsfParser, sanitize
 
 
@@ -11,8 +13,8 @@ def demo_run():
 
     parser = AsfParser()
     parser.parse('examples/12.asf')
-    parser.save_json('humanoid_mocap.json')
-    parser.save_mujoco_xml('humanoid_mocap.xml')
+    parser.save_json('mocap_env/humanoid_mocap.json')
+    parser.save_mujoco_xml('mocap_env/humanoid_mocap.xml')
 
     # parse AMC file (animation)
     amc_file = open('examples/02_01.amc', 'r')
